@@ -1,86 +1,102 @@
 <!DOCTYPE html>
 <html lang="sv-SE">
+
 <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Client time</title>
-    <link rel="shortcut icon" href="favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap">
-    <script src="https://kit.fontawesome.com/16b29154c0.js" crossorigin="anonymous"></script>
-    <link rel="stylesheet" href="style.css">
-    <script src="script.js" type="module" defer></script>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Client time</title>
+	<link rel="shortcut icon" href="favicon.svg" type="image/svg+xml">
+	<link rel="stylesheet"
+		href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap">
+	<script src="https://kit.fontawesome.com/16b29154c0.js" crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="style.css">
+	<script src="script.js" type="module" defer></script>
 </head>
+
 <body>
-    <div v-scope @vue:mounted="mounted" :class="{ 'loaded': loaded }" class="root editor">
+	<div v-scope @vue:mounted="mounted" :class="{ 'loaded': loaded }" class="root editor">
 
-        <div v-if="modalType" class="modal">
-            <div v-if="modalType == 'menu'" class="modal-container">
-                <div class="modal-main">
-                    <div class="modal-top">
-                        <span class="modal-label">
-                            {{ modal.timer.label }}
-                        </span>
-                        <button @click="closeModal" class="modal-close">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
-                    </div>
-                    <div class="modal-content">
-                        <div class="modal-field">
-                            <i class="modal-text fa-solid fa-stopwatch"></i>
-                            <span class="modal-text">
-                                {{ timeDisplay(modal.timer.millisCounter) }}
-                                {{ secsTimeDisplay(modal.timer.millisCounter) }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-btns">
-                    <button @click="resetTimer(modal.timer.id)" class="modal-element btn">Nollställ</button>
-                    <button @click="removeTimer(modal.timer.id)" class="modal-element btn btn-danger">Radera</button>
-                </div>
-            </div>
-        </div>
+		<div v-if="modalType" class="modal">
+			<div v-if="modalType == 'menu'" class="modal-container">
+				<div class="modal-main">
+					<div class="modal-top">
+						<span class="modal-label">
+							{{ modal.timer.label }}
+						</span>
+						<button @click="closeModal" class="modal-close">
+							<i class="fa-solid fa-xmark"></i>
+						</button>
+					</div>
+					<div class="modal-content">
+						<div class="modal-field">
+							<i class="modal-text fa-solid fa-stopwatch"></i>
+							<span class="modal-text">
+								{{ timeDisplay(modal.timer.millisCounter) }}
+								{{ secsTimeDisplay(modal.timer.millisCounter) }}
+							</span>
+						</div>
+					</div>
+					<div class="modal-content">
+						<div class="modal-field">
+							<i class="modal-text fa-solid fa-palette"></i>
+							<select v-model="modal.timer.colour" @change="updateTimerColor"
+								:style="{ 'color': useDarkColourOnBg(getColourDataByColourId(modal.timer.colour).hex) ? '#000000' : getColourDataByColourId(modal.timer.colour).hex }"
+								class="modal-element inp">
+								<option v-for="colour in colours" :value="colour.id" class="modal-field-coloropt">{{
+									colour.name }}</option>
+							</select>
+						</div>
+					</div>
+				</div>
+				<div class="modal-btns">
+					<button @click="resetTimer(modal.timer.id)" class="modal-element btn">Reset</button>
+					<button @click="removeTimer(modal.timer.id)" class="modal-element btn btn-danger">Remove</button>
+				</div>
+			</div>
+		</div>
 
-        <main>
-            <div class="btns">
-                <button class="btn btn-left btn-ok">
-                    <i class="fa-solid fa-grip btn-icon"></i>
-                </button>
-                <button class="btn btn-right" :disabled="!activeTimer">
-                    <i class="fa-solid fa-expand btn-icon"></i>
-                </button>
-                <button @click="newTimer" class="btn">
-                    <i class="fa-solid fa-plus btn-icon"></i>
-                    <span>Ny</span>
-                </button>
-            </div>
-            <div class="timers">
-                <div v-for="timer in timers" class="timer" :class="{ 'active': activeTimer == timer.id }">
-                    <div class="timer-label">
-                        <input type="text" v-model="timer.label" class="inp" placeholder="Click to edit label">
-                    </div>
-                    <div class="timer-counter">
-                        <span v-if="activeTimer == timer.id" class="timer-counter">{{ counterDisplay }}</span>
-                        <span v-else class="timer-counter">{{ timeDisplay(timer.millisCounter) }}</span>
-                        <span v-if="activeTimer == timer.id" class="timer-counter-secs">{{ secsCounterDisplay }}</span>
-                        <span v-else class="timer-counter-secs">{{ secsTimeDisplay(timer.millisCounter) }}</span>
-                    </div>
-                    <div class="timer-btns">
-                        <button v-if="activeTimer == timer.id" @click="pause(timer.id)" class="btn btn-ok">
-                            <i class="fa-solid fa-pause btn-icon"></i>
-                        </button>
-                        <button v-else @click="resume(timer.id)" class="btn btn-ok">
-                            <i class="fa-solid fa-play btn-icon"></i>
-                        </button>
-                        <button v-if="activeTimer != timer.id" @click="timerOptionsMenu(timer.id)" class="btn">
-                            <i class="fa-solid fa-ellipsis-vertical btn-icon"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </main>
+		<main>
+			<div class="btns">
+				<button class="btn btn-left btn-ok">
+					<i class="fa-solid fa-grip btn-icon"></i>
+				</button>
+				<button class="btn btn-right" :disabled="!activeTimer">
+					<i class="fa-solid fa-expand btn-icon"></i>
+				</button>
+				<button @click="newTimer" class="btn">
+					<i class="fa-solid fa-plus btn-icon"></i>
+					<span>New</span>
+				</button>
+			</div>
+			<div class="timers">
+				<div v-for="timer in timers" class="timer" :class="{ 'active': activeTimer == timer.id }"
+					:style="{ '--timer-bg': getColourDataByColourId(timer.colour).hex + '30', '--timer-colour': getColourDataByColourId(timer.colour).hex, '--timer-border': getColourDataByColourId(timer.colour).hex + '80' }">
+					<div class="timer-label">
+						<input type="text" v-model="timer.label" class="inp" placeholder="Click to edit label">
+					</div>
+					<div class="timer-counter">
+						<span v-if="activeTimer == timer.id" class="timer-counter">{{ counterDisplay }}</span>
+						<span v-else class="timer-counter">{{ timeDisplay(timer.millisCounter) }}</span>
+						<span v-if="activeTimer == timer.id" class="timer-counter-secs">{{ secsCounterDisplay }}</span>
+						<span v-else class="timer-counter-secs">{{ secsTimeDisplay(timer.millisCounter) }}</span>
+					</div>
+					<div class="timer-btns">
+						<button v-if="activeTimer == timer.id" @click="pause(timer.id)" class="btn">
+							<i class="fa-solid fa-pause btn-icon"></i>
+						</button>
+						<button v-else @click="resume(timer.id)" class="btn btn-ok">
+							<i class="fa-solid fa-play btn-icon"></i>
+						</button>
+						<button v-if="activeTimer != timer.id" @click="timerOptionsMenu(timer.id)" class="btn">
+							<i class="fa-solid fa-ellipsis-vertical btn-icon"></i>
+						</button>
+					</div>
+				</div>
+			</div>
+		</main>
 
-    </div>
+	</div>
 </body>
+
 </html>
